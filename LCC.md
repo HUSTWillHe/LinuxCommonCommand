@@ -732,12 +732,18 @@ ps是process status的缩写，用于显示瞬间进程的动态
 ```bash
 ps [options]
 ```
-**参数解释：**  
-```txt
--A 列出所有的进程
--w 加宽显示，显示较多的信息
--au 显示详细资讯
--aux 显示包含其他使用者的进程
+**常见用法：**  
+```bash
+ps -A #列出所有的进程
+ps -u heliwei #-u后面加用户名可以查找特定用户的进程
+ps -au #显示详细资讯
+ps -aux --sort -pcpu | less #如果希望按照CPU或内存两来筛选，这样就能找到哪个进程占用了资源，使用这个参数能看到性能相关更全面的信息。使用--sort命令按照cpu使用率排序，并用less显示出来。
+ps -aux --sort +pmem | less #按照内存使用升序排序
+ps -aux --sort -pcpu,+pmem | head -n 10 #按照cpu使用率降序，内存升序排序，并显示前10个结果
+ps -f -C tmux #-C后面跟想找的进程名
+ps -axjf #以树状结构显示进程，更优的做法是使用命令pstree
+watch -n 1 'ps -aux --sort -pmem,-pcpu' #使用watch命令，每个1s调用ps命令，来动态查看进程信息
+watch -n 1 'ps -aux -U heliwei --sort -pmem,-pcpu | head 20' #只查找用户名为heliwei的内存降序cpu降序的前20个进程
 ```
 **表头含义：**  
 - USER 进程拥有者
@@ -840,30 +846,66 @@ KiB Swap:        0 total,        0 free,        0 used. 13593748 avail Mem
 - B 打开或关闭当前进程显示效果
 - shift + \> \/ \< 进程列表默认是按照CPU使用率进行排序，如果想按照其他列进行排序可以使用"shift + \>"或"shift + \<"进行切换
 
-### kill
+### kill/pkill/killall
 **作用:**  
-切换目录  
+终止指定的进程，通常终止一个前台进程可用Ctrl+C，但是对于后台进程就必须用kill命令，我们需要先使用ps/pidof/pstree/top等工具获取进程PID，然后使用kill命令来杀掉该进程。kill命令是通过向进程发送指定的信号来结束相应进程的。在默认情况下，采用编号为15的TERM信号。TERM信号将终止所有不能捕获该信号的进程。对于哪些可以捕获该信号的进程就要用编号为9的kill信号，强行“杀掉”该进程。  
 **语法:**  
 ```bash
+kill [options] [pid]...
+```
+**常见用法：**  
+```bash
+kill -l #列出所有信号名称
+kill -l TERM #获取TERM信号对应的数值
+kill 60222 #查找到进程对应的编号后杀掉进程 
+kill -9 60222 #彻底杀死进程
+kill -9 $(ps -ef | grep tom)
+kill -u tom #杀死指定用户进程
+ps aux | grep httpd | awk '{print $2}' | xargs kill -9 #杀死所有httpd创建的进程
+pkill -9 httpd #作用同上
+killall -9 httpd #作用同上
+pgrep -l httpd #列出httpd产生的所有进程
 ```
 ### free
 **作用:**  
-切换目录  
+free命令可以显示Linux系统中的空闲的，已用的物理内存及swap内存，及被使用的buffer。  
 **语法:**  
 ```bash
+free [options]
 ```
 **常见用法：**  
 ```bash
+free -b #以byte为单位显示内存使用情况，类似的用法还有-k(KB) -m(MB) -g(GB)
+watch -n 1 -d free #动态显示内存使用情况，-d表示高亮变化部分
+cat /proc/meminfo #如果需要获取更多与内存相关的信息，可以直接查看/proc/meminfo文件
 ```
+**输出含义：**  
+- total 物理内存大小总计（total=used+free）
+- used 总计分配给缓存(包括buffers和cache)使用的数量，但其中可能部分缓存并未实际使用
+- free 未被分配的内存
+- shared 多个进程共享的内存总额
+- buffers 系统分配但未被使用的buffer数量
+- cached 系统分配但未被使用的cache数量
 ### time
 **作用:**  
-切换目录  
+通常用于计算命令的执行时间，和资源占用   
 **语法:**  
 ```bash
+time [options] [command]
 ```
-**常见用法：**  
+**使用示例：**  
 ```bash
+$ time sleep 3
+sleep 3  0.00s user 0.00s system 0% cpu 3.002 total
 ```
+`0.00s user` 表示用户态cpu时间  
+`0.00s system` 表示核心态cpu时间  
+`0% cpu` cpu利用率  
+`3.002 total` 整个运行耗时。可以理解为在sleep运行结束时系统时间减去开始运行时系统的时间  
+以上三者的关系是：`%cpu_usage = (user_time + sys_time)/real_time*100%`
+cpu处于核心态时，代码具有完全的不受任何限制的访问底层硬件的能力。可执行任意的CPU指令，访问任意的内存地址。内核台通常情况下都是为那些最底层的，由操作系统提供的，可信可靠的代码来运行。内核态的代码崩溃将是灾难性的，会影响到整个系统。  
+cpu处于用户态时，代码不具备直接访问硬件或者访问内存的能力，而必须借助操作系统提供的可靠的，底层API来访问硬件或内存。由于这种隔离带来的保护作用，用户态的代码崩溃，系统是可以恢复的。我们大部分的代码是运行在用户态的。  
+区分用户态和核心态目的是为了隔离保护，让系统更稳定。  
 ### date
 **作用:**  
 切换目录  
