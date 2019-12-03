@@ -908,156 +908,261 @@ cpu处于用户态时，代码不具备直接访问硬件或者访问内存的�
 区分用户态和核心态目的是为了隔离保护，让系统更稳定。  
 ### date
 **作用:**  
-切换目录  
+显示系统的日期和时间  
 **语法:**  
 ```bash
+date [options] [format]
 ```
 **常见用法：**  
 ```bash
+date -d '+5 day' #显示5天之后的日期时间 
+date -d '1 month ago' #显示 一个月之前的日期时间
+date -d 'last-sunday' #显示上一个周日的日期时间
+date -d 'next-monday' #显示上一个周日的日期时间
+date -d 'next-day' +%Y-%m-%d #以yyyy-mm-dd显示明天的日期时间
+date -s 20221111 #设置日期
+date -s 12:12:12 #设置时间
+date -s "2012-12-12 12:12:12"
+date +"%T" #只显示时间
+date +"%F" #以yyyy-mm-dd显示日期
+date +"%j" #显示今天是一年的第几天
 ```
 ### history
 **作用:**  
-切换目录  
+查看历史命令  
 **语法:**  
 ```bash
+history [options]
 ```
 **常见用法：**  
 ```bash
+history -c #清除所有命令历史
+history | tail -n 5 #查看最近5条命令
+history -5 #查看最近5条命令
 !53 #运行历史记录中标号为53的命令
 !! #运行最后一条命令  
+!5223:p #执行history中第5223条指令并显示命令语句
+!cat #执行前面执行过的以cat为起始字符的命令  
+history | grep ls | wc -l #查看用了多少次ls命令
+^oldstring^newstring #将前一个命令oldstring部分修改为newstring并执行
+find . -name "a.txt"
+^a.txt^b.txt #回车后将会执行find . -name "b.txt"，不过如果shell配置有上方向键显示上一个命令，直接回到上一个命令在上面修改更直观.
+history | awk '{print $2}' | sort | uniq -c | sort -k1,1nr| head -10 #查找历史命令中使用最多的10条命令
+Ctrl + R #键入关键字搜索历史命令
+Ctrl + p #向前翻历史命令
+Ctrl + n #向后翻历史命令
 ```
 ### ping
 **作用:**  
-切换目录  
+用于定位，测试网络问题，通过发送ICMP请求到指定的IP地址，并等待反馈    
 **语法:**  
 ```bash
+ping [options] <destination>
 ```
 **常见用法：**  
 ```bash
+ping -i 3 -s 1024 -t 255 -c 2  www.baidu.com #-i 3表示发送周期为3秒，-s 1024表示设置发送包的大小，-t 255 表示TTL(ICMP转发次数)为255， -c 2表示收到两次包后自动退出
 ```
 ### ip
 **作用:**  
-切换目录  
+ip命令与ifconfig命令类似，功能更加强大，旨在取代后者。  
 **语法:**  
 ```bash
+ip [options] <object> {command | help}
 ```
 **常见用法：**  
 ```bash
+ip addr show #列出网卡的诸如IP地址，子网网络信息
 ```
-### which
+### which/whereis
 **作用:**  
-切换目录  
+which在PATH变量指定的路径中搜索某个系统命令的位置并返回第一个搜索结果，也就是说可以看到某个系统命令是否存在以及执行的到底是哪一个位置的命令。  
+whereis指令会在特定目录中查找符合条件的文件，这些文件应属于原始代码、二进制文件或者帮助文件。  
 **语法:**  
 ```bash
+which <command>...
 ```
 **常见用法：**  
 ```bash
-```
-### whereis
-**作用:**  
-切换目录  
-**语法:**  
-```bash
-```
-**常见用法：**  
-```bash
-```
-### whoami
-**作用:**  
-切换目录  
-**语法:**  
-```bash
-```
-**常见用法：**  
-```bash
+which bash zsh #查看bash，zsh命令路径
+whereis -b bash #查看bash二进制文件所在位置
+whereis -m bash #查看bash说明文档所在位置
+whereis -s bash #查看bash源代码文件，若不存在则不显示
 ```
 ### id
 **作用:**  
-切换目录  
+id命令可以显示用户ID（UID）和组ID（GID）  
 **语法:**  
 ```bash
+id [options] [user]
 ```
-**常见用法：**  
+**使用示例：**  
+```txt
+$ id
+uid=11637(heliwei) gid=11637(heliwei) groups=11637(heliwei),27(sudo),44(video),11638(fuse
+```
+上面结果表示heliwei的UID为11637，GID为11637。这个群组下的成员包括heliwei,sudo,video,fuse  
 ```bash
+id root #列出root用户的uid和gid
+id -G #列出不同组的id，可以与/etc/group文件中的内容对比
 ```
 ### uname
 **作用:**  
-切换目录  
+获取操作系统信息  
 **语法:**  
 ```bash
+uname [options]
 ```
 **常见用法：**  
 ```bash
+uname #如果在Linux下会输出Linux，在Macos下会输出Darwin
+uname -r #输出Linux的内核发行版本
+uname -n #输出主机名称
+if [[ `uname`x == Linux ]]; then date -d "+1 month"; else date -v-1m; fi #因为date命令在Linux和MacOS下的形式有差别，所以用uname先判断当前是在Linux还是MacOS下，以实现跨平台的脚本
 ```
-### who
+### who/whoami
 **作用:**  
-切换目录  
+who显示系统中有哪些使用者在上面，包括使用者ID使用者终端机，上线时间，呆滞时间，CPU使用量，动作等等  
+whoami 是who am i的简洁写法，显示当前用户名  
 **语法:**  
 ```bash
+who [options] [user]
+whoami
 ```
 **常见用法：**  
 ```bash
+whoami #将输出当前用户名
+who -b #显示系统启动时间
 ```
+```txt
+$ who 
+heliwei  pts/0        2019-12-03 13:49 (10.124.133.37)
+heliwei  pts/1        2019-12-03 11:24 (tmux(1255).%0)
+heliwei  pts/2        2019-12-03 13:49 (tmux(1255).%1)
+```
+第一列显示用户名称  
+第二列显示用户连接方式，tty表示用户直接连在电脑上，pts意味着远程连接  
+第三列第四列表示日期和时间  
+第五列显示用户登录的IP地址  
+
 ### exit
 **作用:**  
-切换目录  
+退出当前shell，在shell脚本中可以终止当前脚本运行  
 **语法:**  
 ```bash
+exit [returnCode]
 ```
 **常见用法：**  
 ```bash
+exit 0 #退出并返回退出码，0表示成功，非0表示失败,2表示用法不当，127表示命令未找到，126表示不可执行
+$? #获取上一条命令的返回码
+cd $(dirname $0) || exit 1 #如果不能切换到脚本所在目录，反馈错误代码1
+trap "rm -f tmpfile; echo Bye" EXIT #在脚本中，退出是删除临时文件，trap命令的作用是监听EXIT信号，当收到此信号之后执行command操作  
+if [[ $? != 0 ]];then echo "Illeagle"; fi #检查上一个命令是否成功返回，若不成功输出提示
 ```
-### shutdown
+### shutdown/poweroff/reboot/halt
 **作用:**  
 切换目录  
 **语法:**  
 ```bash
+shutdown [options]
+poweroff [options]
+reboot [options]
+halt [options]
 ```
 **常见用法：**  
 ```bash
+sudo shutdown -h 8:30 #设置关机时间为八点半
+
+sudo shutdown now #立即关机
+sudo poweroff #立即关机
+sudo reboot -p #立即关机
+sudo halt -p #立即关机
+
+sudo shutdown -r #关机后重启
+sudo poweroff --reboot #关机后重启
+sudo reboot #关机后重启
+sudo halt --reboot #关机后重启
+
+sudo poweroff --halt #停止机器
+sudo halt #停止机器
+sudo shutdown -H now #停止机器
+sudo reboot --halt #停止机器
+
+sudo shutdown -c #取消关机
 ```
 ### sleep
 **作用:**  
-切换目录  
+将调用的进程挂起一段时间，在给定的时间内暂停命令的执行。常用于重试失败或者循环中。  
 **语法:**  
 ```bash
+
 ```
 **常见用法：**  
 ```bash
+sleep 1m20s #暂停1分20秒，s表示秒，m表示分钟，h表示小时，d表示天
+while :
+do 
+	if ping -c 1 www.baidu.com &> /dev/null
+	then
+		echo "network works."
+		break
+	fi
+	sleep 5
+done #每过5秒检查一次网络是否能连上
 ```
 ### df
 **作用:**  
-切换目录  
+显示目前在Linux系统上的文件系统的磁盘使用情况  
 **语法:**  
 ```bash
+df [options] [file]...
 ```
-### du
-**作用:**  
-切换目录  
-**语法:**  
-```bash
+**使用示例：**  
+```txt
+$ df -h 
+ystem      1K-blocks     Used  Available Use% Mounted on
+/dev/vda         52403200 40567240   11835960  78% /
+rootfs            8161000   389848    7771152   5% /brainpp
+tmpfs             8241616      132    8241484   1% /run
+tmpfs             8241616       12    8241604   1% /tmp
+share_dir        98290172   617188   97672984   1% /etc/hosts
+devtmpfs          8172468        0    8172468   0% /dev
+tmpfs             8241616        0    8241616   0% /dev/shm
+tmpfs                5120        0       5120   0% /run/lock
+tmpfs             8241616        0    8241616   0% /sys/fs/cgroup
+/dev/sda       1073217536 51647408 1021570128   5% /data
 ```
-
-**常见用法：**  
-```bash
-```
+第一列表示文件系统对应的设备文件路径名（一般是硬盘上的分区）;第二列给出分区包行的数据块（1024字节），第三、四列分别表示已用的和可用的数据块的数目。
 ### export
 **作用:**  
-切换目录  
+设置或者显示环境变量  
+"/bin","/sbin","/usr/bin","/usr/sbin","/usr/local/bin"等路径在系统环境变量中，如果可执行文件在这几个标准位置，在终端命令行输入该软件可执行文件的文件名和参数即可执行。  
+如果指令的执行文件不在上述目录中可以使用`export $PATH=$PATH:路径`来实现增加新路径到环境变量。如果想要修改永久生效，可以将它写入到/etc/profile或者用户祝目录下的.bashrc文件中。前者对所有用户生效，后者只对该用户生效  
+执行一个脚本时，会先开启一个子shell环境，子shell会继承父shell所有环境变量，但结束时在子shell中定义的环境变量并不能返回给父shell。  
+如果不加export直接用`name=value`的形式赋值，这个变量并不会传递给子shell，因为这种方式并不会产生环境变量。  
 **语法:**  
 ```bash
+export [options] [<name> = <value>]...
 ```
 **常见用法：**  
 ```bash
+export -p #列出所有shell赋予程序的环境变量
+export -n BIN_UTILS #-n表示删除环境变量,变量实际上未删除，只是不在后续指令环境中  
+export PATH=${PATH}:${GRADLE_HOME}:${NDK_HOME} #将GRADLE_HOME和NDK_HOME添加到环境变量中,可以将这条语句写入到`/etc/profile`或`.bashrc`中。
 ```
 ### source
 **作用:**  
-切换目录  
+在bash环境下读取并执行文件中的命令   
 **语法:**  
 ```bash
+source <fileName>
 ```
 **常见用法：**  
 ```bash
+sh run.sh #重新建立一个子shell，在子shell里面执行脚本中的语句，该子shell继承父shell的环境变量，但子shell新建的，改变的变量不会被带回父shell
+./run.sh #与sh run.sh作用相同，仅仅当run.sh在当前目录下可以这样使用
+source environment.sh #这个命令只是简单地抽取脚本中的语句，依次在shell中执行，没有建立新的shell。脚本里面所有新建、改变变量的语句都会保存在shell里面
 ```
 
 ---
@@ -1108,7 +1213,9 @@ set -e -o pipefail #在脚本开头写这句话，单行或者单行管道命令
 # 效果等同于脚本开头"#! /bin/bash -e"
 ```
 ### eval
+### expr
 ### curl
+### script
 ---
 
 # 三、扩展命令
@@ -1123,4 +1230,6 @@ set -e -o pipefail #在脚本开头写这句话，单行或者单行管道命令
 ## vim/nvim
 ---
 # 四、Linux与MacOS常见差别
+可以参考以下文件中最后一部分内容  
+[MacOS与Linux终端脚本兼容性问题](https://wiki.megvii-inc.com/pages/viewpage.action?pageId=78881994#SDK%E5%B7%A5%E7%A8%8B%E6%89%93%E5%8C%85%E8%84%9A%E6%9C%AC%E6%8E%92%E5%9D%91%E8%AE%B0%E5%BD%95-%E5%85%B6%E4%BB%96Mac%E4%B8%8ELinux%E7%9A%84%E7%BB%88%E7%AB%AF%E8%84%9A%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7%E9%97%AE%E9%A2%98)
 ---
