@@ -1168,7 +1168,129 @@ source environment.sh #这个命令只是简单地抽取脚本中的语句，依
 ---
 
 # 二、进阶命令
-### &/|/!/\#/$
+### $//\[
+- $0	脚本名称，相对路径还是绝对路径取决于调用方式，如果是./run.sh调用，则$0就是./run.sh；如果是/root/test/run.sh调用，则$0是/root/test/run.sh。
+- $\*	脚本的所有参数
+- $@	同$\*
+- $#	脚本参数的个数不包括$0在内
+- $$	shell脚本执行时的进程号
+- $?	上一个命令的输出结果，或者exit的返回值
+- $!	上一条后台进程执行的pid号
+- !$	上一条命令最后一个字符串
+- $-	使用set命令设定的flag
+- $\(\)	执行括号内的指令，并使用其结果
+- $\[\]	方括号内可以使用数学运算符进行比较或计算
+- $\{\}	用于分隔大括号内的变量名，如果变量名不需要分隔可以省略大括号
+### \#
+- \#!	后面跟一个文件名，用于声明执行脚本的程序，一般在脚本文件的开头使用 
+### \(\)/\[\]/\{\}
+- 单小括号()
+	- 命令组：括号中的命令将会新开一个子shell顺序执行，所以括号内的变量不能被脚本余下的部分使用。括号中的多个命令之间用分号隔开，最后一个命令可以没有分号，各命令和括号之间不必有空格。
+	- 命令替换：'$()'等同于'``'。将括号内的命令执行一次，得到其标准输出，再将此输出放到原命令
+	- 初始化数组：例如arr=(1 2 3)
+- 双小括号(())
+	- 整数扩展：这种扩展运算是整数型运算，不支持浮点型。结构拓展并计算一个算术表达式的值，如果表达式结果为0，返回状态码为1或者'false',而一个非零值表达式所返回的退出状态码将为0或者'true'，
+	- 只要括号中的运算符符合C语言元算规则都可以在$(())中，例如echo $((16#5f))，结果为95（将16进制转换成10进制）
+	- 单纯用(())也可以重定义变量值，比如a=5;((a++))可将$a重定义为6
+	- 常用于算术运算比较，双括号中的变量可以不使用\$前缀。括号内支持多个表达式逗号隔开。只要括号中符合C语言运算规则，比如可以直接使用for((i=0;i<5;i++)),如果不使用双括号，则为for i in `seq 0 4`，或for i in {0..4}。在如可以直接使用if(($i<5))，如果不使用双括号，则为if [ $i -lt 5 ]。
+- 单中括号[]
+	- bash的内部命令，左中括号[与test是等同的，常与if配合使用。左中括号表示调用test的命令标识，右中括号是关闭条件判断。
+	- $[]的方括号中可以进行数学运算，中括号中的变量名前面可以不带$
+	- test和[]中可用的比较运算符只有==和!=，两者都是用于字符串比较的，不可用于整数比较，整数比较知恩感使用-eq,-gt,-lt这种形式。无论是字符串比较还是整数比较都不支持大于号和小于号，需要使用转义符来实现[ ab \< bc ]。[]中的逻辑与和逻辑或使用-a和-o表示。
+	- 字符范围：用作正则表达式中，描述一个匹配字符范围，例如用[0-9]表示数字[a-zA-Z]表示字母。作为test用于的中括号不能使用正则。
+	- 在一个数组结构的上下文中，中括号用来引用数组中每个元素的编号，例如echo ${arr[1]}，表示输出arr中第一个元素，注意bash中元素从第1个开始计算。
+- 双中括号[[]]
+相比于单中括号，双中括号支持更多的符号如&& || < >等，且支持正则表达式
+	```bash
+	if [[ $a != 0 && $a != 1 ]];then echo "yes"; fi
+	if [ $a -ne 1] && [ $a -ne 0 ]; then echo "yes"; fi
+	if [ $a -ne 1 -a $a -ne 0 ]; then echo "yes"; fi
+	if [[ hello == hell? ]]; then echo "yes"; fi #等号的右边可以为正则表达式
+	```
+- 大括号{}
+	- 对大括号中的文件名做扩展。在大括号中不允许有空白，除非空白被引用或者转义。第一种，对大括号中的以逗号分隔的列表进行扩展。第二种：对大括号中以'..'分隔的顺序文件列表起扩展作用
+		```bash
+		ls {ex1,ex2}.txt
+		ls {ex{1..3},ex4}.txt
+		ls {ex[1-3],ex4}.txt
+		```
+	- 几种特殊的替换结构，下面string不一定为常值，也可以为一个变量的值或命令的输出
+		- ${var:-string} 若var为空，则在命令行中用string来替换${var:-string}，否则使用var的值来替换${var:-string}
+		- ${var:=string} 作用同上，不同点在于如果var为空，会将string的值赋予var
+		- ${var:+string} 规则于上面相反，只有当var不是空的时候才会替换成string，若var为空值则返回空值
+		- ${var:?string} 若var不为空时，用变量var的值替换${var:?string}，若变量var为空，则把string输出到标准错误中
+	- 字符串截取 [见字符串截取小节](###字符串截取)
+	- 命令组：与小括号的命令组的区别在于不会重新开一个shell，大括号中的操作会影响到大括号外的内容  
+### if/else
+**语法：**
+```bash
+if [ <some test> ]
+then
+	<commands>
+else
+	<commands>
+fi
+```
+**用法示例：**
+```bash
+a=100
+b=90
+if test $a -gt $b #可以使用test命令来替代中括号
+then
+	echo "a is larger than b."
+else
+	echo "a is NOT larger than b."
+fi
+
+if [[ $a == 100 && $b == 90 ]];then #双中括号中可以使用符号来判断大小或相等，使用;来替代换行使脚本更加紧凑
+	echo "a equals 100 and b equals 90."
+fi
+
+if [ $a -lt 200 -o $b -gt 10 ];then #使用-o表示或，-a表示与
+	echo "a less than 200 or b greater than 10."
+fi
+
+if [ -z $a ]; then #-z用于判断变量长度是否大于0
+	echo "length of a is not zero."
+fi
+
+if [[ $a > 0 ]]; then echo "a is greater than 0"; else echo "a is not greater than 0"; fi #在一行命令中使用if语句
+```
+常见的其他参数有：
+- -d 文件是否为目录
+- -e 文件是否存在
+- -x 文件是否可执行
+- -f 文件是否为常规文件
+- -r 文件是否可读
+### for
+**使用示例：**
+```bash
+for i in 'apple' 'banana' 'sleep'
+do
+	echo I like $i
+done
+
+a=(apple banana)
+for i in $a;do echo I like $i; done
+
+for i in $(seq 1 2 10)
+do
+	echo $i
+done
+
+for i in {1..100..2} #从1到100，间隔为2
+do
+	echo $i
+done
+
+ans=0
+for ((i=1; i<=100; i++))
+do
+	let ans+=$i
+done
+```
+### while
+### case
 ### grep
 ### find
 ### sed
@@ -1177,11 +1299,9 @@ source environment.sh #这个命令只是简单地抽取脚本中的语句，依
 ### xargs
 ### git
 ### ssh
+### scp
 ### tmux
 ### watch
-### if/else
-### for
-### while
 ### Shortcuts
 Linux终端内置了一些快捷键操作，大大增加了命令输入修改的效率  
 - Ctrl + n: 显示下一个命令，oh-my-zsh中方向键下有相同功能
@@ -1200,7 +1320,57 @@ Linux终端内置了一些快捷键操作，大大增加了命令输入修改的
 - Ctrl + k: 删除从当前光标到结尾的所有字符
 
 
-### ${##%%}
+### 字符串截取
+在shell脚本中需要从字符串中提取需要的内容常常通过`${}`来截取需要的内容。在大括号中，变量名不需要使用'$'来表明：  
+
+- $\{someString#experssion} 截断左边最小匹配expression表达式的字符串，保留右边的部分
+```bash
+$ a=Users/heliwei/Downloads/log.txt
+$ echo ${a#*/} #从左向右读取原字符串，符合`*/`最短的子字符串为'Users/'，切除匹配部分得到最终结果
+heliwei/Downloads/log.txt
+```
+- $\{someString##experssion} 截断左边最大匹配expression表达式的字符串，保留右边的部分
+```bash
+$ a=Users/heliwei/Downloads/log.txt
+$ echo ${a##*/} #与上面的差别在于这里是找到匹配'*/'最长子字符串并删除
+log.txt
+```
+- $\{someString%experssion} 截断右边最小匹配expression表达式的字符串，保留左边的部分
+```bash
+$ a=Users/heliwei/Downloads/log.txt
+$ echo ${a%/*} #与第一个例子差别在于从右向左读取原字符串，找到最短匹配'/*'的子字符串切除，保留左边子字符串
+/Users/heliwei/Downloads
+```
+- $\{someString#experssion} 截断左边最小匹配expression表达式的字符串，保留右边的部分
+```bash
+$ a=Users/heliwei/Downloads/log.txt
+$ echo ${a%%/*} #与上一个例子的差别在于找到最长匹配'/*'的子字符串，并切除保留左边子字符串
+Users
+```
+- ${someString:num1:num2} 按照数字截取字符串，num1表示开始的字符序号，num2表示子字符串的长度
+```
+$ a=Users/heliwei/Downloads/log.txt
+$ echo ${a:0:5} #输出启始字符序号为0，长度为5的字符串
+Users
+```
+- ${someString:num1} 截取子字符串，从左边第几个字符开始，一直到结束
+```
+$ a=Users/heliwei/Downloads/log.txt
+$ echo ${a:6} #从第6个字符开始截取到末尾
+heliwei/Downloads/log.txt
+```
+- ${someString:0-num1:num2} 从右边开始数num1个字符为开始，截取num2长度的子字符串
+```
+$ a=Users/heliwei/Downloads/log.txt
+$ echo ${a:0-7:3} #从右到左第7个字符开始，截取长度为3的子字符串
+log
+```
+- ${someString:0-num1} 截取从右边开始数num1个字符为开始，到末尾的字符串
+```
+$ a=Users/heliwei/Downloads/log.txt
+$ echo ${a:0-7} #从右到左第7个字符开始，截取到末尾的子字符串
+log.txt
+```
 ### sort
 ### uniq
 ### tr
