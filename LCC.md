@@ -1177,7 +1177,7 @@ source environment.sh #这个命令只是简单地抽取脚本中的语句，依
 - $\*	脚本的所有参数
 - $@	同$\*
 - $#	脚本参数的个数不包括$0在内
-- $$	shell脚本执行时的进程号
+- $\$	shell脚本执行时的进程号
 - $?	上一个命令的输出结果，或者exit的返回值
 - $!	上一条后台进程执行的pid号
 - !$	上一条命令最后一个字符串
@@ -1467,17 +1467,64 @@ $ > END
 ls x* y* 2>&1 | sort #stderr并不会经由管道传递到stdin，通过绑定stdout传递到sort命令中
 ```
 ### grep
+所有的Linux系统都会提供一个名为grep(global regular expression print)的搜索工具。grep命令在对一个或多个文件的内容进行基于模式的搜索的情况下是非常有用的。  
+**使用示例：**
+```bash
+grep ^banana$ a.txt b.txt #在a.txt和b.txt中搜索banana的全匹配，^和$分别表示以此开头和以此为结尾
+grep -r banana ./ #在当前文件夹下递归搜索banana
+grep -c -r -e banana -e apple ./ #使用-e参数可以进行多个模式的匹配，-c可以统计匹配的数量
+grep -Eri "ban*|appl?" ./ #-E表示使用正则表达式，-i表示可以忽略大小写。grep -E也可以用egrep命令代替
+ls | grep -Ec "*\.txt" #grep的一个广泛的用法是在管道后面，查找上一个命令输出的内容,-c表示统计出现次数
+find . -name ".mp3" | grep -i jay | grep -vi "remix" #-v表示去除匹配项
+ifconfig | grep -oP "([0-9]{1,3}\.){3}[0-9]{1,3}" #找出所有ip地址,-o表示只显示匹配成功的部分，-P表示使用Perl正则表达式
+grep -oE "[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+" a.txt #在文件中查找邮箱名
+history | grep "ls" | wc -l #找出命令行历史中使用了多少次ls
+```
+**正则表达式符号含义**
+|符号|含义|
+|---|---|
+|.		|匹配任何单个字符|
+|?		|匹配一个字符0次或1次|
+|\*		|匹配任意不同字符大于等于0次		|
+|+		|匹配任意不同字符大于等于1次		|
+|{N}	|匹配前一个字符N次					|
+|{N,}	|匹配前一个字符大于等于N次			|
+|{N,M}	|匹配前一个字符N到M次				|
+|-		|在列表中表示范围					|
+|^		|开始标记							|
+|$		|结束标记							|
+|\b		|类似于^和$作用之和，但是只能匹配字符|
+|\\\<	|匹配单词开始的字符串				|
+|\\\>	|匹配单词结尾的字符串				|
 ### find
+find命令用于在文件夹中查找文件，并可以对其进行操作  
+**使用示例：**
+```bash
+find ./  -iname "*jpg" -o -iname "*jpeg"  -type f 
+find ./ -name "*txt" -a -not -user root -type f#查找用户名不是root且后缀为txt的文件
+find ./ -name "*apk" -size -10M #-size表示按文件大小筛选，+表示大于-表示小于，后面的单位可以为K、M、G
+find ./ -size 0 -exec rm {} \; #删除空文件
+```
+第一个命令表示在当前文件夹下查找jpg和jpeg文件。-name表示文件名字，-iname表示忽略大小写的文件名，-type f表示查找类型是文件，而非文件夹。-o用于实现多个查找  
+条件组合的参数还有:-a表示与，-not表示非。也可以用!来代替-not选项
+```bash
+find ./ -iname "*jpg" -o -iname "*jpeg" -type f -exec cp {} ./test \;
+find ./ -iname "*jpg" -o -iname "*jpeg" -type f | xargs rm -f
+find ./ -iname "*jpg" -o -iname "*jgeg" -type f -delete
+```
+-exec选项可以对查找到的文件执行命令，{}表示找到的内容。这个功能同样可以通过xargs将输出转化为参数传递给后续命令。-delete表示将找到的文件删除
 ### sed
+sed的全名为stream editor，即流编辑器，用程序的方式来编辑文本  
+**参数：**
+- -i 直接修改读取文件内容，而不是输出到终端
+- 
+**操作**
+- a 新增，a后面接字符串，字符串会出现在当前行的下一行
 ### awk
 ### perl
 ### xargs
-### git
-### ssh
-### scp
-### tmux
 ### watch
-### Shortcuts
+### 快捷键
 Linux终端内置了一些快捷键操作，大大增加了命令输入修改的效率  
 - Ctrl + n: 显示下一个命令，oh-my-zsh中方向键下有相同功能
 - Ctrl + p: 显示上一个命令
@@ -1493,7 +1540,6 @@ Linux终端内置了一些快捷键操作，大大增加了命令输入修改的
 - Ctrl + w: 剪切光标之前的单词，然后Ctrl + y粘贴它
 - Ctrl + u: 剪切光标之后的单词，然后Ctrl + y粘贴它
 - Ctrl + k: 删除从当前光标到结尾的所有字符
-
 
 ### 字符串处理
 在shell脚本中需要从字符串中提取需要的内容常常通过`${}`来截取需要的内容。在大括号中，变量名不需要使用'$'来表明：  
