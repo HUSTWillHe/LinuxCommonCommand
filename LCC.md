@@ -308,7 +308,6 @@ chgrp -R --reference=a.txt ./dir/ #表示递归修改"dir"下文件所属群组�
 ### tar
 **作用:**  
 tar 是linux中最常用的解压缩命令。tar命令可以用于处理后缀名为tar,tar.gz,tgz,tar.Z,tar.bz2的文件
-切换目录  
 **语法:**  
 ```bash
 tar [options] <commpressedFile> <originFile>...
@@ -502,7 +501,7 @@ read -s password #-s表示不在屏幕上显示输入的内容，常用于输入
 READ_TIMEOUT=60
 read -t "$READ_TIMEOUT" input #为输入设置过期时间
 
-count = 1
+count=1
 cat test | while read line
 do
 	echo "Line $count:$line"
@@ -511,6 +510,7 @@ done
 echo "finish"
 exit 0 #通过管道读取文件汇总的内容,每次读取一行
 ```
+需要指出的是，上述最后一个例子中count的计数在循环结束之后并不会显示实际的行数，因为使用管道会开启一个新的子shell，而子shell对变量的更改并不会影响到父shell中变量的值。
 ### head/tail
 **作用:**  
 head 将一段文本或者管道输入的最前面一部分输出到标准输出    
@@ -533,61 +533,12 @@ tr A-Z a-z |					#大小写转换
 
 history | tail -n 10 #查看最近使用的10个命令  
 ```
-### vi/vim
-**作用:**  
-查看或编辑文本文件  
-**语法:**  
-```bash
-vi [options] [file-name]...
-```
-**常见用法：**  
-```bash
-vi +10 a.txt #打开a.txt并将光标置于第10行行首
-vi +/cout*  a.txt #打开a.txt并将光标移动到第一个cout之处
-```
-**编辑方法：**
-- h 左移动一个字符
-- l 右移动一个字符
-- j 下移动一个字符
-- k 上移动一个字符
-- 0 移动至行首
-- ^ 移动至行首
-- $ 移动至行尾
-- G 移动至最后一行行首
-- gg 移动至第一行行首
-- f/F 向后/向前搜索一个字符，并跳转到第一个匹配项
-- ; 重复f/F搜索操作
-- /\<abc\>\C 搜索文本中完全匹配abc的内容,\C表示区分大小写
-- n 移动至下一个匹配处
-- N 移动至上一个匹配处
-- i 光标之前插入
-- a 光标之后插入
-- o 换行后插入
-- x 删除一个字符
-- dd 删除一行
-- s 删除一个字符并切换到插入模式
-- r 替换一个字符
-- . 重复修改操作
-- v 进入到Visual模式
-- : 进入到命令模式
-- :wq! 强制保存文件并退出
-- :%s/abc\*/ddd/gc 替换abc开头的文本为ddd
-- :reg 查看寄存器中的内容，使用<寄存器>+y可以粘贴到文本中
-- :set number 让文本左边显示行号，可以在vimrc中加上这句以永久显示行号
-- qa <operations> q , @a 录制<opreations>操作，放入a寄存器中，@a表示重复录制的操作
-- y/p yy/pp 复制,粘贴。重复的使用总是表示对一行进行操作，所以yy/pp表示复制一行/粘贴一行
-- "+y "+p "寄存器表示系统剪切板,所以"+y/"+p表示复制或粘贴系统剪切板中的内容，这样也可以粘贴复制其他寄存器
-- u/Ctrl + r 撤销上一个操作，重复上一个操作
-- == 格式化一行内容
-- Ctrl + v 进入列编辑模式，配合大写I可以同时对多行进行插入
-- \<\< \>\> 向左/右移动一个制表符
-
 ### cat
 **作用:**  
-切换目录  
+从文件或标准输入中读入内容，输出到文件或标准输出中  
 **语法:**  
 ```bash
-cat [options] [>] <fileName>... [<<EOF]
+cat [options] 
 ```
 **常见用法：**  
 如果用echo显示脚本用法，当文字较多时，echo语句条理将变得混乱，一个比较好的方法是使用cat来代替  
@@ -596,7 +547,8 @@ cat<<EOF
 Usage: myscript <command> <arguments>
 Version: 1.0
 Available Commands
-	install -
+	install -...
+	...
 EOF
 
 cat<<"EOF" #这里EOF上有引号，所以下面的USER变量不会被展开
@@ -693,6 +645,14 @@ name age: tom 10: jerry 11
 height:120:110
 ls | paste #作用等同于ls -1 将ls的输出每个占一行显示
 ```
+### sort
+
+### uniq
+### tr
+```bash
+seq 100 | echo $[ $(tr '\n' '+') 0]
+```
+
 ### wc
 **作用：**  
 用于计算数量,可以是文件的byte数、字数或者行数  
@@ -857,14 +817,22 @@ KiB Swap:        0 total,        0 free,        0 used. 13593748 avail Mem
 ```bash
 kill [options] [pid]...
 ```
+**常用信号含义：**
+|代号|名称|内容|
+|---|---		|---|
+|1	|SIGHUP		|启动被终止的程序，可让该进程重新读取自己的配置文件，类似重新启动|
+|2	|SIGINT		|相当于Ctrl+c来终端一个进程的进行|
+|9	|SIGKILL	|强制终止一个程序的进行，如果该程序进行到一半，那么尚未完成的部分可能会有"半成品"产生，类似与vim中的.swp文件|
+|15	|SIGTERM	|以正常的方式来终止程序。由于是正常终止，所以后续动作将会完成。如果这个程序已经发生问题，就是无法正常终止时，收到此信号也没有用|
+|19	|SIGSTOP	|相当于在键盘输入Ctrl+z来暂停一个程序的进行|
 **常见用法：**  
 ```bash
 kill -l #列出所有信号名称
 kill -l TERM #获取TERM信号对应的数值
 kill 60222 #查找到进程对应的编号后杀掉进程 
-kill -9 60222 #彻底杀死进程
-kill -9 $(ps -ef | grep tom)
-kill -u tom #杀死指定用户进程
+kill -9 60222 #-9表示向进程发送SIGKILL信号，表示强制终端一个进程
+kill -9 $(ps -ef | grep tom) #杀死用户tom进程
+kill -u tom #作用同上 
 ps aux | grep httpd | awk '{print $2}' | xargs kill -9 #杀死所有httpd创建的进程
 pkill -9 httpd #作用同上
 killall -9 httpd #作用同上
@@ -892,7 +860,7 @@ cat /proc/meminfo #如果需要获取更多与内存相关的信息，可以直�
 - cached 系统分配但未被使用的cache数量
 ### time
 **作用:**  
-通常用于计算命令的执行时间，和资源占用   
+通常用于计算命令的执行时间   
 **语法:**  
 ```bash
 time [options] [command]
@@ -1020,6 +988,7 @@ uname [options]
 **常见用法：**  
 ```bash
 uname #如果在Linux下会输出Linux，在Macos下会输出Darwin
+uname -a #显示所有的信息
 uname -r #输出Linux的内核发行版本
 uname -n #输出主机名称
 if [[ `uname`x == Linux ]]; then date -d "+1 month"; else date -v-1m; fi #因为date命令在Linux和MacOS下的形式有差别，所以用uname先判断当前是在Linux还是MacOS下，以实现跨平台的脚本
@@ -1061,12 +1030,12 @@ exit [returnCode]
 exit 0 #退出并返回退出码，0表示成功，非0表示失败,2表示用法不当，127表示命令未找到，126表示不可执行
 $? #获取上一条命令的返回码
 cd $(dirname $0) || exit 1 #如果不能切换到脚本所在目录，反馈错误代码1
-trap "rm -f tmpfile; echo Bye" EXIT #在脚本中，退出是删除临时文件，trap命令的作用是监听EXIT信号，当收到此信号之后执行command操作  
+trap "rm -f tmpfile; echo Bye" EXIT #在脚本中，退出时删除临时文件，trap命令的作用是监听EXIT信号，当收到此信号之后执行command操作  
 if [[ $? != 0 ]];then echo "Illeagle"; fi #检查上一个命令是否成功返回，若不成功输出提示
 ```
 ### shutdown/poweroff/reboot/halt
 **作用:**  
-切换目录  
+关机重启或停止机器  
 **语法:**  
 ```bash
 shutdown [options]
@@ -1100,7 +1069,7 @@ sudo shutdown -c #取消关机
 将调用的进程挂起一段时间，在给定的时间内暂停命令的执行。常用于重试失败或者循环中。  
 **语法:**  
 ```bash
-
+sleep [--help] [--version] number[smhd]
 ```
 **常见用法：**  
 ```bash
@@ -1124,27 +1093,27 @@ df [options] [file]...
 ```
 **使用示例：**  
 ```txt
-$ df -h 
-ystem      1K-blocks     Used  Available Use% Mounted on
-/dev/vda         52403200 40567240   11835960  78% /
-rootfs            8161000   389848    7771152   5% /brainpp
-tmpfs             8241616      132    8241484   1% /run
-tmpfs             8241616       12    8241604   1% /tmp
-share_dir        98290172   617188   97672984   1% /etc/hosts
-devtmpfs          8172468        0    8172468   0% /dev
-tmpfs             8241616        0    8241616   0% /dev/shm
-tmpfs                5120        0       5120   0% /run/lock
-tmpfs             8241616        0    8241616   0% /sys/fs/cgroup
-/dev/sda       1073217536 51647408 1021570128   5% /data
+$ df -h #-h表示human readable 显示易读的内容
+ystem      Size  Used Avail Use% Mounted on
+/dev/vda         50G   44G  6.2G  88% /
+rootfs          7.8G  381M  7.5G   5% /brainpp
+tmpfs           7.9G  140K  7.9G   1% /run
+tmpfs           7.9G   12M  7.9G   1% /tmp
+share_dir        94G  667M   94G   1% /etc/hosts
+devtmpfs        7.8G     0  7.8G   0% /dev
+tmpfs           7.9G     0  7.9G   0% /dev/shm
+/dev/sda        1.0T   56G  969G   6% /data
+tmpfs           5.0M     0  5.0M   0% /run/lock
+tmpfs           7.9G     0  7.9G   0% /sys/fs/cgroup
 ```
 第一列表示文件系统对应的设备文件路径名（一般是硬盘上的分区）;第二列给出分区包行的数据块（1024字节），第三、四列分别表示已用的和可用的数据块的数目。
-### export
+### export/set
 **作用:**  
 设置或者显示环境变量  
-"/bin","/sbin","/usr/bin","/usr/sbin","/usr/local/bin"等路径在系统环境变量中，如果可执行文件在这几个标准位置，在终端命令行输入该软件可执行文件的文件名和参数即可执行。  
-如果指令的执行文件不在上述目录中可以使用`export $PATH=$PATH:路径`来实现增加新路径到环境变量。如果想要修改永久生效，可以将它写入到/etc/profile或者用户祝目录下的.bashrc文件中。前者对所有用户生效，后者只对该用户生效  
-执行一个脚本时，会先开启一个子shell环境，子shell会继承父shell所有环境变量，但结束时在子shell中定义的环境变量并不能返回给父shell。  
 如果不加export直接用`name=value`的形式赋值，这个变量并不会传递给子shell，因为这种方式并不会产生环境变量。  
+执行一个脚本时，会先开启一个子shell环境，子shell会继承父shell所有环境变量，但结束时在子shell中定义的环境变量并不能返回给父shell。  
+比较常见的环境变量如PATH。"/bin","/sbin","/usr/bin","/usr/sbin","/usr/local/bin"等路径在系统环境变量中，如果可执行文件在这几个标准位置，在终端命令行输入该软件可执行文件的文件名和参数即可执行。  
+如果指令的执行文件不在上述目录中可以使用`export $PATH=$PATH:路径`来实现增加新路径到环境变量。如果想要修改永久生效，可以将它写入到/etc/profile或者用户祝目录下的.bashrc文件中。前者对所有用户生效，后者只对该用户生效  
 **语法:**  
 ```bash
 export [options] [<name> = <value>]...
@@ -1157,34 +1126,35 @@ export PATH=${PATH}:${GRADLE_HOME}:${NDK_HOME} #将GRADLE_HOME和NDK_HOME添加�
 ```
 ### source
 **作用:**  
-在bash环境下读取并执行文件中的命令   
+在当前shell中读取并执行文件中的命令  
+当我们执行一个脚本的时候，是在终端的shell中fork一个子shell然后执行的，执行之后再返回原shell，如果在子shell中设置了某个环境变量，并不会在父shell中生效。使用source或者dot(.)明确告诉shell不要fork执行脚本，而是在当前shell执行，这样修改的环境变量就保存下来了。
 **语法:**  
 ```bash
 source <fileName>
 ```
 **常见用法：**  
 ```bash
-sh run.sh #重新建立一个子shell，在子shell里面执行脚本中的语句，该子shell继承父shell的环境变量，但子shell新建的，改变的变量不会被带回父shell
-./run.sh #与sh run.sh作用相同，仅仅当run.sh在当前目录下可以这样使用
-source environment.sh #这个命令只是简单地抽取脚本中的语句，依次在shell中执行，没有建立新的shell。脚本里面所有新建、改变变量的语句都会保存在shell里面
+sh run.sh #通过这种方式或者使用路径加脚本名方式执行一个脚本会重新建立一个子shell，在子shell里面执行脚本中的语句，该子shell继承父shell的环境变量，但子shell新建的，改变的变量不会返回父shell
+source environment.sh #这个命令只是简单地抽取脚本中的语句，依次在shell中执行，没有建立新的shell。脚本里面所有新建、改变变量的语句都会保存在当前shell里面
+. newJob.env #作用同上
 ```
-
 ---
 
 # 二、进阶命令
 ### $
-- $0	脚本名称，相对路径还是绝对路径取决于调用方式，如果是./run.sh调用，则$0就是./run.sh；如果是/root/test/run.sh调用，则$0是/root/test/run.sh。
-- $\*	脚本的所有参数
-- $@	同$\*
+- $0	shell脚本中$1,$2...表示的是脚本或可执行文件调用的第几个参数，所有脚本都会将其调用方式作为第0个参数。比如使用./run.sh调用那么$0就是./run.sh；如果使用sh ./tmp/run.sh调用，那么$0就是./tmp/run.sh
+- \$@	返回脚本的所有的参数。在参数转发的时候应使用another.sh "$@"的形式。因为如果没有用引号包括起来，在参数转发的时候，带空格的参数会被接收参数的脚本理解为两个参数的隔断。比如如果有一个参数是"aa  bbb"会被理解为aa和bbb
+- \$\*	返回脚本的所有的参数。如果以带引号的形式转发所有参数,就像another.sh "，\$\*"会将所有的参数合并成一行；如果以不带引号的形式转发所有参数，如another.sh \$\*，单个参数中间有空格会被理解为多个参数。
 - $#	脚本参数的个数不包括$0在内
 - $\$	shell脚本执行时的进程号
-- $?	上一个命令的输出结果，或者exit的返回值
+- $?	上一个命令的返回值
 - $!	上一条后台进程执行的pid号
 - !$	上一条命令最后一个字符串
 - $-	使用set命令设定的flag
 - $\(\)	执行括号内的指令，并使用其结果
 - $\[\]	方括号内可以使用数学运算符进行比较或计算
 - $\{\}	用于分隔大括号内的变量名，如果变量名不需要分隔可以省略大括号
+
 ### ;/||/&&
 |符号	|格式					|作用										|
 |----	|----					|----										|
@@ -1205,7 +1175,7 @@ source environment.sh #这个命令只是简单地抽取脚本中的语句，依
 	- 常用于算术运算比较，双括号中的变量可以不使用\$前缀。括号内支持多个表达式逗号隔开。只要括号中符合C语言运算规则，比如可以直接使用for((i=0;i<5;i++)),如果不使用双括号，则为for i in `seq 0 4`，或for i in {0..4}。在如可以直接使用if(($i<5))，如果不使用双括号，则为if [ $i -lt 5 ]。
 - 单中括号[]
 	- bash的内部命令，左中括号[与test是等同的，常与if配合使用。左中括号表示调用test的命令标识，右中括号是关闭条件判断。
-	- $[]的方括号中可以进行数学运算，中括号中的变量名前面可以不带$
+	- \$[]的方括号中可以进行数学运算，中括号中的变量名前面可以不带$
 	- test和[]中可用的比较运算符只有==和!=，两者都是用于字符串比较的，不可用于整数比较，整数比较知恩感使用-eq,-gt,-lt这种形式。无论是字符串比较还是整数比较都不支持大于号和小于号，需要使用转义符来实现[ ab \< bc ]。[]中的逻辑与和逻辑或使用-a和-o表示。
 	- 字符范围：用作正则表达式中，描述一个匹配字符范围，例如用[0-9]表示数字[a-zA-Z]表示字母。作为test用于的中括号不能使用正则。
 	- 在一个数组结构的上下文中，中括号用来引用数组中每个元素的编号，例如echo ${arr[1]}，表示输出arr中第一个元素，注意bash中元素从第1个开始计算。
@@ -1225,12 +1195,13 @@ source environment.sh #这个命令只是简单地抽取脚本中的语句，依
 		ls {ex[1-3],ex4}.txt
 		```
 	- 几种特殊的替换结构，下面string不一定为常值，也可以为一个变量的值或命令的输出
-		- ${var:-string} 若var为空，则在命令行中用string来替换${var:-string}，否则使用var的值来替换${var:-string}
-		- ${var:=string} 作用同上，不同点在于如果var为空，会将string的值赋予var
-		- ${var:+string} 规则于上面相反，只有当var不是空的时候才会替换成string，若var为空值则返回空值
-		- ${var:?string} 若var不为空时，用变量var的值替换${var:?string}，若变量var为空，则把string输出到标准错误中
+		- \${var:-string} 若var为空，则在命令行中用string来替换${var:-string}，否则使用var的值来替换\${var:-string}
+		- \${var:=string} 作用同上，不同点在于如果var为空，会将string的值赋予var
+		- \${var:+string} 规则于上面相反，只有当var不是空的时候才会替换成string，若var为空值则返回空值
+		- \${var:?string} 若var不为空时，用变量var的值替换${var:?string}，若变量var为空，则把string输出到标准错误中
 	- 字符串截取 [见字符串截取小节](###字符串截取)
 	- 命令组：与小括号的命令组的区别在于不会重新开一个shell，大括号中的操作会影响到大括号外的内容  
+
 ### if/else
 **语法：**
 ```bash
@@ -1454,10 +1425,10 @@ ls x* 2>&1 >stdout.txt #并不能将stderr也输出到stdout.txt中，因为第�
 ```bash
 $ tr ' ' '\t'<log.txt #将输入重定向，将文件内容读入标准输入
 $ sort -k2 <<END
-$ > 1 apple
-$ > 2 pear
-$ > 3 banana
-$ > END
+> 1 apple
+> 2 pear
+> 3 banana
+> END
 1 apple
 3 banana
 2 pear
@@ -1496,6 +1467,83 @@ history | grep "ls" | wc -l #找出命令行历史中使用了多少次ls
 |\b		|类似于^和$作用之和，但是只能匹配字符|
 |\\\<	|匹配单词开始的字符串				|
 |\\\>	|匹配单词结尾的字符串				|
+### xargs
+**作用：**  
+xargs的作用，就是将标准输入转换为命令行参数。Linux有些命令可以接受标准输入作为参数，而管道命令的作用，是将左侧命令的标准输出转换为标准输入，提供给右侧命令作为参数使用。在Linux系统中大多数命令都不接受标准输入作为参数，这导致无法使用管道命令传递参数。比如日常使用的echo就不接受管道传参。
+```bash
+cat /etc/passwd | grep root #grep能接受管道传参
+echo "hello world" | echo #错误！echo不能接受管道传参
+echo "hello world" | xargs echo #将标准输入转换为命令行参数
+```
+需要注意的是xargs后面默认是echo命令，所以它可以单独使用  
+```bash
+$ xargs
+hello
+hello
+$ xargs find -name
+"*.txt"
+hello.txt
+b.txt
+```
+xargs会将标准输入当作find命令的参数并在当前目录下查找匹配的文件名  
+默认情况下xargs将换行符和空格作为分隔符，将标准输入分解成一个个命令行参数  
+-d 参数可以更改分隔符
+```bash
+echo "one two three" | xargs mkdir #创建one two three三个文件夹
+echo "a\tb\tc" | xargs -d "\t" echo #将分隔符指定为\t，会分别输出a b c
+```
+xargs在转换参数的过程，有时需要确认一下到底执行的是什么命令。  
+使用-p参数打印出执行的命令，并询问用户是否要执行。  
+使用-t命令打印出最终要执行的命令，然后直接执行，不需要用户确认。
+```bash
+echo "one two three" | xargs -p mkdir
+echo "one two three" | xargs -t rm -r 
+```
+由于xargs默认将空格作为分隔符，所以不太适合处理文件名，因为文件名可能包含空格。  
+find命令有一个特别的参数-print0，指定输出的文件列表以null分隔。然后，xargs命令的-0参数表示用null当作分隔符。两者搭配使用可以破解文件名中包含空格的情况
+```bash
+touch "a a.txt"
+find . -name "*txt" -print0 | xargs -0 rm #如果没有-print0和-0参数，将会被识别为删除a和a.txt两个文件
+```
+如果标准输入包括多行，-L参数可以用来指定多少行作为命令参数。
+```bash
+$ xargs find -name #错误的做法，因为find命令不能同时将"*.txt"和"*.md"作为参数
+"*.txt"
+"*.md"
+find: paths must precede expression: *.md
+
+$ xargs -L 1 find -name #正确的做法，每行作为一个参数传递给find命令
+"*.txt"
+./a.txt
+./b.txt
+"*.md"
+./c.md
+```
+-L虽然解决了多行的问题，但是如果一行中包含多个参数仍然会报错
+```bash
+$ xargs find -name #错误的做法，会将"*.txt","*.md"都当作find的参数
+"*.txt" "*.md"
+find: paths must precede expression: *.md
+
+$ xargs -n 1 find -name
+"*.txt" "*.md"
+./a.txt
+./c.md
+```
+如果想要将命令行参数传给多个命令，可以使用-I参数。  
+-I指定每一项命令行参数的替代字符串
+```bash
+$ cat words.txt
+one
+two
+three
+$ cat words.txt | xargs -I file sh -c "echo file; mkdir file" #使用file来代替参数
+one
+two
+three
+$ ls
+one two three
+```
 ### find
 find命令用于在文件夹中查找文件，并可以对其进行操作  
 **使用示例：**
@@ -1515,14 +1563,69 @@ find ./ -iname "*jpg" -o -iname "*jgeg" -type f -delete
 -exec选项可以对查找到的文件执行命令，{}表示找到的内容。这个功能同样可以通过xargs将输出转化为参数传递给后续命令。-delete表示将找到的文件删除
 ### sed
 sed的全名为stream editor，即流编辑器，用程序的方式来编辑文本  
+以`sed -n '1,4 p' file.txt`为例可以看出，一个简单的sed命令包含参数，范围，操作三部分
 **参数：**
 - -i 直接修改读取文件内容，而不是输出到终端
-- 
+- -e 用于多点编辑，每个-e后都可以接一个动作
+- -f 直接将sed动作写在文：件内，-f filename可以运行filename内的sed动作
+- -n 安静模式。在一般sed用法中所有的stdin数据都会被输出到终端，安静模式下只有经过sed处理那一行才会被列出来  
+
 **操作**
+- s 替换，最常用的操作之一，通常搭配正则表达式使用  
+- p 打印，将选择的数据打印出，通常会与-n配合使用
 - a 新增，a后面接字符串，字符串会出现在当前行的下一行
+- i 插入，i后面接字符串，字符串会出现在当前行的上一行
+- d 删除，删除选定范围的内容  
+
+**使用示例：**
+```bash
+sed -n '1,4 p' file.txt
+```
+上面例子可以分为三个部分，`参数`：`-n`,`范围`：`1,4`,`操作`：`p`。  
+-n 表示--quiet或--silent的意思。表明忽略执行过程的输出，只输出我们的结果即可。  
+范围指定部分`1,4`表示找到文中1，2，3，4行的内容。范围的主要表示方式有：  
+- 5 选择第5行
+- 2,5 选择第2到第5行，共4行
+- 1~2 选择奇数行 
+- 2~2 选择偶数行
+- 2,+3 与2,5的效果一样，共4行
+- 2,$ 从第2行到文件结尾  
+- /^sys/,3 范围的选择还可以使用正则表达式，选择以sys开头到之后的三行，共4行
+- /^sys/,/mem/ 选择以sys开头的行，和出现mem字样行之间的数据，包括出现了这两个字样的行  
+p表示对内容进行打印，除此之外还可以进行如s，a，i，d之类的操作。  
+```bash
+sed '/^sys/,+3 s/oldString/newString/g' file.txt
+```
+/^sys/,+3 表示编辑范围为以sys开头的行到其后面3行  
+s表示替换命令  
+/oldString/newString/ 为替换前和替换后的字符。  
+g 为flag参数，常见的flag参数和含义如下：
+- g 表示全文替换。如果没有g只会默认替换第一个匹配的内容  
+- p 配合-n参数使用，将仅输出匹配行的内容  
+- i 忽略大小写  
+- e 表示将输出的每一行执行一个命令，可以使用xargs配合完成这个功能  
+```bash
+sed 's/[0-9]\{1,\}/NUMBERS/g'
+```
+表示将开头为foo或者bar的字符替换成newString。这里使用来正则表达式来表示头部匹配，常见的用于替换的正则表达式有：  
+- ^ 行首定位符，/^my/表示所有以my开头的行  
+- $ 行尾定位符，/my$/表示所有以my结尾的行
+- . 匹配除换行符以外的单个字符，/m..y/表示字母m后面任意两个字符，再跟字母y的行
+- \* 匹配0个或多个前导符号 /my\*/匹配包含my后面连接0个或多个y的行
+- \+ 与\*作用基本相同，至少重复1次
+- [] 匹配指定字符组内的任意字符，[0-9]表示所有数字
+- \\\{n,m\\\} 前导符号重复n次到m次
+- \\\{n,\\\} 前导符号重复n次以上
+- \\| 匹配或符号前或后任意一个
+```bash
+sed 's/.*/"&"/' file #将文件中每行内容用引号包括起来。&在替换字符中表示的是原始查找匹配的数据
+sed -n '/^.{50}/p' #打印长度不小于50个字符的行
+sed 's/ /\n/g' file | sort | unique -c | sort -k1 -r #统计文件中单词出现的次数，并按照降序排列
+sed ./ -name "*.py" | xargs sed -i.bak '/^[ ]*#/d' #将所有python文件的整行注释删除
+sed -n -e '5,7 p' -e '10,14p' file #打印出文件的5到7行，和文件的10到14行
+```
 ### awk
 ### perl
-### xargs
 ### watch
 ### 快捷键
 Linux终端内置了一些快捷键操作，大大增加了命令输入修改的效率  
@@ -1542,7 +1645,7 @@ Linux终端内置了一些快捷键操作，大大增加了命令输入修改的
 - Ctrl + k: 删除从当前光标到结尾的所有字符
 
 ### 字符串处理
-在shell脚本中需要从字符串中提取需要的内容常常通过`${}`来截取需要的内容。在大括号中，变量名不需要使用'$'来表明：  
+在shell脚本中需要从字符串中提取需要的内容常常通过`${}`来截取需要的内容：  
 
 - $\{someString#experssion} 截断左边最小匹配expression表达式的字符串，保留右边的部分
 ```bash
@@ -1616,12 +1719,6 @@ $ a=Users/heliwei/Downloads/log.txt
 $ echo ${a/%log.txt/a.sh} #将以log.txt结尾替换成a.sh，若不以此结尾则不会替换
 Users/heliwei/Downloads/a.sh
 ```
-### sort
-### uniq
-### tr
-```bash
-seq 100 | echo $[ $(tr '\n' '+') 0]
-```
 ### set
 ```bash
 set -e -o pipefail #在脚本开头写这句话，单行或者单行管道命令出现错误，脚本会停止执行并报错
@@ -1630,7 +1727,6 @@ set -e -o pipefail #在脚本开头写这句话，单行或者单行管道命令
 ### eval
 ### expr
 ### exec
-### curl
 ### script
 ---
 
