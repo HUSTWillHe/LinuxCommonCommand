@@ -294,11 +294,18 @@ $ sort -k2 <<END
 1 apple
 3 banana
 2 pear
+
+cat > fruits.txt <<EOF #将标准输出重定向至文件，并通过here-document结束标准输入
+> apple
+> banana
+> orange
+> EOF
 ```
 管道的作用是将stdout导向stdin，将上一个命令的输出作为下一个命令的输入
 ```bash
 ls x* y* 2>&1 | sort #stderr并不会经由管道传递到stdin，通过绑定stdout传递到sort命令中
 ```
+
 ### grep
 所有的Linux系统都会提供一个名为grep(global regular expression print)的搜索工具。grep命令在对一个或多个文件的内容进行基于模式的搜索的情况下是非常有用的。  
 **使用示例：**

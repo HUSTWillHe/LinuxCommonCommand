@@ -541,7 +541,7 @@ history | tail -n 10 #查看最近使用的10个命令
 cat [options] 
 ```
 **常见用法：**  
-如果用echo显示脚本用法，当文字较多时，echo语句条理将变得混乱，一个比较好的方法是使用cat来代替  
+如果用echo显示脚本用法，当文字较多时，echo语句条理将变得混乱，一个比较好的方法是使用cat配合here-document来  
 ```bash
 cat<<EOF
 Usage: myscript <command> <arguments>
@@ -555,14 +555,6 @@ cat<<"EOF" #这里EOF上有引号，所以下面的USER变量不会被展开
 hello $USER
 EOF
 ```
-这里的<<称为here document，可以将字符串防止在两个EOF之间，这里的EOF也可以用其他的标志代替。here document中默认会将变量展开，如果需要不展开变量可以在第一个EOF中打引号。这种方法同时可以应用到向文件中写入的操作
-```bash
-$ cat > ~/a.cpp <<EOF
-> #include <iostream>
-> using namespace std;
-> EOF
-```
-更简单的方法是使用cat\>file来向文件中写入，只是需要使用Ctrl+c或者Ctrl+d来结束输入
 cat也可以用于将一个文件的内容输出到另一个文件 `cat -n file2 > file2` 将file1中的内容带上行号输入到file2中 -n表示统计行号  
 ### dirname/basename
 **语法：**  
@@ -647,7 +639,7 @@ ls | paste #作用等同于ls -1 将ls的输出每个占一行显示
 ```
 ### sort
 **作用：**  
-对文件或者标准输入进行排序
+对文件或者标准输入进行排序  
 **语法:**  
 ```bash
 sort [options] [file]
@@ -689,7 +681,7 @@ echo "tom:18:192cm\njerry:19:178cm\nmike:15:178cm" | sort -n -t ":" -k 3,3.3r -k
 
 ### uniq
 **作用：**
-用于检查及删除文本文件中重复出现的列，常与sort命令组合使用
+用于检查及删除文本文件中重复出现的列，常与sort命令组合使用  
 **语法:**  
 ```bash
 uniq [options] [inputFile] [outputFile]
@@ -728,7 +720,7 @@ history | tail -n 200 | awk {print $2} | uniq -c | sort -k 1,1nr | head -n 10 #�
 uniq -c会统计相同行出现的次数，根据出现的次数倒序排序便可以获取使用最多的10个命令
 ### tr
 **作用：**  
-用于删除文件中控制字符或进行字符转换
+用于删除文件中的字符或进行字符转换  
 **语法:**  
 ```bash
 tr [options] [string1] [string2]
@@ -752,7 +744,7 @@ echo "Hello World" | tr '[a-z]' '[A-Z]' #小写转大写，输出HELLO WORLD
 echo "Hello World" | tr '[A-Z]' '[a-z]' #大写转小写，输出hello world
 echo "Hello World" | tr '[a-zA-Z]' '[A-Za-z]' #大小写互相转换，输出hELLO wORLD
 ```
-tr另一个重要的作用是用新的字符集替换原始字符集
+tr另一个重要的作用是用新的字符替换原始字符
 ```bash
 seq 100 | echo $[ $(tr '\n' '+') 0] #计算1到100所有整数之和
 ```
@@ -922,12 +914,13 @@ KiB Swap:        0 total,        0 free,        0 used. 13593748 avail Mem
 kill [options] [pid]...
 ```
 **常用信号含义：**
+
 |代号|名称|内容|
-|---|---		|---|
+|----|----|----|
 |1	|SIGHUP		|启动被终止的程序，可让该进程重新读取自己的配置文件，类似重新启动|
-|2	|SIGINT		|相当于Ctrl+c来终端一个进程的进行|
-|9	|SIGKILL	|强制终止一个程序的进行，如果该程序进行到一半，那么尚未完成的部分可能会有"半成品"产生，类似与vim中的.swp文件|
-|15	|SIGTERM	|以正常的方式来终止程序。由于是正常终止，所以后续动作将会完成。如果这个程序已经发生问题，就是无法正常终止时，收到此信号也没有用|
+|2	|SIGINT		|相当于Ctrl+c来终止一个进程的进行|
+|9	|SIGKILL	|强制终止一个程序的进行，与SIGINT的主要区别在于SIGINT只能终止前台进程而SIGKILL不是。kill命令默认不带参数就是发送SIGTERM，让程序有好的退出|
+|15	|SIGTERM	|以正常的方式来终止程序。与SIGKILL的区别在于SIGTERM可以被阻塞、处理或忽略，但是SIGKILL不可以|
 |19	|SIGSTOP	|相当于在键盘输入Ctrl+z来暂停一个程序的进行|
 **常见用法：**  
 ```bash
@@ -1095,7 +1088,7 @@ uname #如果在Linux下会输出Linux，在Macos下会输出Darwin
 uname -a #显示所有的信息
 uname -r #输出Linux的内核发行版本
 uname -n #输出主机名称
-if [[ `uname`x == Linux ]]; then date -d "+1 month"; else date -v-1m; fi #因为date命令在Linux和MacOS下的形式有差别，所以用uname先判断当前是在Linux还是MacOS下，以实现跨平台的脚本
+if [[ `uname` == Linux ]]; then date -d "+1 month"; else date -v-1m; fi #因为date命令在Linux和MacOS下的形式有差别，所以用uname先判断当前是在Linux还是MacOS下，以实现跨平台的脚本
 ```
 ### who/whoami
 **作用:**  
