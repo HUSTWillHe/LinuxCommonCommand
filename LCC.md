@@ -599,7 +599,7 @@ $ cut -c 1-4 table.txt #输出table.txt以字符为单位进行分割的第1-4�
 name
 tom 
 jerr
-$ cut -b 1,3,6 table.txt #输出table.txt以字符为单位，但忽略多字节字符边界的1,3,6列,与-的差别主要在中文的使用上 
+$ cut -b 1,3,6 table.txt #输出table.txt以字符为单位，但忽略多字节字符边界的1,3,6列 
 nma
 tm0
 jr 
@@ -686,22 +686,77 @@ echo "tom:18\njerry:19\nmike:15" | sort -n -t ":" -k 2 #根据年龄进行排序
 echo "tom:18:192cm\njerry:19:178cm\nmike:15:178cm" | sort -n -t ":" -k 3,3.3r -k 2 #按照身高降序和年龄升序进行排序
 ```
 如果需要按照多个维度对列表中的内容进行排序，可以在sort命令中使用多个-k参数。使用逗号将起始和重点位置隔开。"-k 3,3.3"表示从第3列开始到第3列的第3个字符结束。如果某个排列需要逆序，则可以在其后面加r表示；同理如果某个排列需要按数字排序而其他不需要，则在那个-k参数后面加n。
+
 ### uniq
 **作用：**
-用于检查及删除文本文件中重复出现的列
+用于检查及删除文本文件中重复出现的列，常与sort命令组合使用
 **语法:**  
-
+```bash
+uniq [options] [inputFile] [outputFile]
+```
 **使用示例：**
 ```bash
-cat a b | sort | uniq > c #并集
-cat a b | sort | uniq -d > c #交集
-cat a b b | sort | uniq -u > c #a与b的差异
-```
-### tr
-```bash
-seq 100 | echo $[ $(tr '\n' '+') 0]
-```
+$ echo "apple\nbanana\norange\napple" | sort | uniq #去除所有重复的内容并输出
+apple
+banana
+orange
 
+$ echo "apple\nbanana\norange\napple" | sort | uniq -d #-d参数表示输出所有有重复的内容
+apple
+
+$ echo "apple\nbanana\norange\napple" | sort | uniq -u #-u参数表示输出所有不重复的内容
+banana
+orange
+
+$ echo "apple\nbanana\norange\napple" | sort | uniq -c #-c参数表示去除重复行的同时显示行出现的次数
+2 apple
+1 banana
+1 orange
+```
+在某些情况下需要求出两个文件的交集并集或者差异，可以通过以下的方式
+```bash
+cat a | sort -u -o a #在原文件上去重
+cat b | sort -u -o b #同上
+cat a b | sort | uniq #求出a和b文件中的并集
+cat a b | sort | uniq -d #求出a和b文件中的交集
+cat a b | sort | uniq -u #求出a与b文件的差异
+```
+sort和uniq -c常常搭配使用来统计词频
+```bash
+history | tail -n 200 | awk {print $2} | uniq -c | sort -k 1,1nr | head -n 10 #统计最近200条命令中使用最多的10条
+```
+uniq -c会统计相同行出现的次数，根据出现的次数倒序排序便可以获取使用最多的10个命令
+### tr
+**作用：**  
+用于删除文件中控制字符或进行字符转换
+**语法:**  
+```bash
+tr [options] [string1] [string2]
+```
+**使用示例：**
+```bash
+echo -e "1\n\n2\n\n\n3\n" | tr -s '\n' #删除输入的空行，输出1\n2\n3
+echo "Hellooo   Worlddd" | tr -s "[ od]" #删除重复出现的od字符和空格，输出Hello World
+echo "Hello     World" | tr -s "[ ]" #将多个空格合并为一个空格
+```
+使用-s参数可以将指定删除重复出现的内容
+```bash
+echo "   Hello World   " | tr -d '[ \t]' #删除输入的空格，如果只需要删除行首或行尾的空格可以使用sed命令
+echo "Hello124 World345" | tr -d '[a-zA-Z]' #将输入所有字母删除，将输出124 345
+echo "Hello124 World345" | tr -d '[0-9]' #将输入所有数字删除，将输出Hello World
+echo "1\n2\n3" | tr -d '\n' #将多行合并成一行
+```
+如果需要删除某个字符集中的内容，可以使用-t参数
+```bash
+echo "Hello World" | tr '[a-z]' '[A-Z]' #小写转大写，输出HELLO WORLD
+echo "Hello World" | tr '[A-Z]' '[a-z]' #大写转小写，输出hello world
+echo "Hello World" | tr '[a-zA-Z]' '[A-Za-z]' #大小写互相转换，输出hELLO wORLD
+```
+tr另一个重要的作用是用新的字符集替换原始字符集
+```bash
+seq 100 | echo $[ $(tr '\n' '+') 0] #计算1到100所有整数之和
+```
+通过将换行符转换为加号对所有输出的数字进行求和计算
 ### wc
 **作用：**  
 用于计算数量,可以是文件的byte数、字数或者行数  
