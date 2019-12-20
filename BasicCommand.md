@@ -635,7 +635,6 @@ jerry 11 110
 $ paste table2.txt table2.txt -d: -s > table.txt && cat table.txt #-d表示指定冒号为输出的分隔符,-s表示将每个文件进行平铺显示
 name age: tom 10: jerry 11
 height:120:110
-ls | paste #作用等同于ls -1 将ls的输出每个占一行显示
 ```
 ### sort
 **作用：**  
@@ -919,7 +918,7 @@ kill [options] [pid]...
 |----|----|----|
 |1	|SIGHUP		|启动被终止的程序，可让该进程重新读取自己的配置文件，类似重新启动|
 |2	|SIGINT		|相当于Ctrl+c来终止一个进程的进行|
-|9	|SIGKILL	|强制终止一个程序的进行，与SIGINT的主要区别在于SIGINT只能终止前台进程而SIGKILL不是。kill命令默认不带参数就是发送SIGTERM，让程序有好的退出|
+|9	|SIGKILL	|强制终止一个程序的进行，与SIGINT的主要区别在于SIGINT只能终止前台进程而SIGKILL不是。kill命令默认不带参数就是发送SIGTERM，让程序友好地退出|
 |15	|SIGTERM	|以正常的方式来终止程序。与SIGKILL的区别在于SIGTERM可以被阻塞、处理或忽略，但是SIGKILL不可以|
 |19	|SIGSTOP	|相当于在键盘输入Ctrl+z来暂停一个程序的进行|
 **常见用法：**  
@@ -1204,6 +1203,25 @@ tmpfs           5.0M     0  5.0M   0% /run/lock
 tmpfs           7.9G     0  7.9G   0% /sys/fs/cgroup
 ```
 第一列表示文件系统对应的设备文件路径名（一般是硬盘上的分区）;第二列给出分区包行的数据块（1024字节），第三、四列分别表示已用的和可用的数据块的数目。
+### du
+**作用:**  
+查看档案或者目录的磁盘使用空间  
+**语法:**  
+```bash
+du [options] [directory]... 
+```
+**参数解释：**
+- a
+**使用示例：**  
+```bash
+du ./ #显示当前目录下文件大小
+du -a #同时显示目录及文件
+du -h ./a.txt #显示a.txt文件大小，-h的含义是human-readable，以易读的形式显示
+du -c ./a.txt ./b.txt #显示多个文件或目录的大小并统计它们的总和
+du -h --max-depth=1 #--maxdepth可以用来指定目录的层次，=1表示只显示当前路径下目录的大小
+find . -type f | xargs -I{} du -d 0 -h {}; #递归列出当前目录下所有文件的大小
+du /etc | sort -nr | more #对/etc目录下文件大小进行排序显示
+```
 ### export/set
 **作用:**  
 设置或者显示环境变量  

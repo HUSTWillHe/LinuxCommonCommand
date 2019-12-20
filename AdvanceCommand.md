@@ -313,7 +313,7 @@ ls x* y* 2>&1 | sort #stderr并不会经由管道传递到stdin，通过绑定st
 grep ^banana$ a.txt b.txt #在a.txt和b.txt中搜索banana的全匹配，^和$分别表示以此开头和以此为结尾
 grep -r banana ./ #在当前文件夹下递归搜索banana
 grep -c -r -e banana -e apple ./ #使用-e参数可以进行多个模式的匹配，-c可以统计匹配的数量
-grep -Eri "ban*|appl?" ./ #-E表示使用正则表达式，-i表示可以忽略大小写。grep -E也可以用egrep命令代替
+grep -Eri "ban*|appl?" ./ #-E表示使用增强正则表达式，-i表示可以忽略大小写。grep -E也可以用egrep命令代替
 ls | grep -Ec "*\.txt" #grep的一个广泛的用法是在管道后面，查找上一个命令输出的内容,-c表示统计出现次数
 find . -name ".mp3" | grep -i jay | grep -vi "remix" #-v表示去除匹配项
 ifconfig | grep -oP "([0-9]{1,3}\.){3}[0-9]{1,3}" #找出所有ip地址,-o表示只显示匹配成功的部分，-P表示使用Perl正则表达式
@@ -400,7 +400,7 @@ $ xargs -n 1 find -name
 ./c.md
 ```
 如果想要将命令行参数传给多个命令，可以使用-I参数。  
--I指定每一项命令行参数的替代字符串
+-I指定后面跟一个字符串，用于替代xargs的输出
 ```bash
 $ cat words.txt
 one
@@ -424,6 +424,10 @@ find ./ -size 0 -exec rm {} \; #删除空文件
 ```
 第一个命令表示在当前文件夹下查找jpg和jpeg文件。-name表示文件名字，-iname表示忽略大小写的文件名，-type f表示查找类型是文件，而非文件夹。-o用于实现多个查找  
 条件组合的参数还有:-a表示与，-not表示非。也可以用!来代替-not选项
+```bash
+find ./ ! -name "*sh" 
+```
+find后面的限制条件前面加感叹号可以表示排除匹配的选项，上述例子表示找出不以sh结尾的文件
 ```bash
 find ./ -iname "*jpg" -o -iname "*jpeg" -type f -exec cp {} ./test \;
 find ./ -iname "*jpg" -o -iname "*jpeg" -type f | xargs rm -f
