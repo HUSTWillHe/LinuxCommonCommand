@@ -440,6 +440,18 @@ echo -e "\"OK \"\n" #-e表示开启转义，使用'\'来转义
 echo `date` #输出date的内容
 echo -n "Would not go to next line." #echo默认会换行，-n表示不换行
 ```
+需要注意的是，在脚本中，echo命令会将变量中的换行替换成空格，为了避免这种替换需要将变量用双引号包括起来。  
+```bash
+$ echo foo.txt
+hello
+world
+$ foo=`cat foo.txt`
+$ echo $foo #将在同一行输出hello world
+hello world
+$ echo "$foo" #将保留分行
+hello 
+world
+```
 在脚本文件中，常常通过颜色定义让脚本输出更具辨识度  
 ```bash
 NORMAL=$(tput sgr0)
