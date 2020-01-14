@@ -307,7 +307,7 @@ fruits=(
 "banana"
 "orange"
 )
-echo "Gauss my favorite fruit."
+echo "Guess my favorite fruit."
 select var in ${fruits[@]}
 do
 	if [ $var = "orange" ];then
@@ -363,22 +363,6 @@ ifconfig | grep -oP "([0-9]{1,3}\.){3}[0-9]{1,3}" #找出所有ip地址,-o表示
 grep -oE "[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+" a.txt #在文件中查找邮箱名
 history | grep "ls" | wc -l #找出命令行历史中使用了多少次ls
 ```
-**正则表达式符号含义**
-|符号|含义|
-|---|---|
-|.		|匹配任何单个字符|
-|?		|匹配一个字符0次或1次|
-|\*		|匹配任意不同字符大于等于0次		|
-|+		|匹配任意不同字符大于等于1次		|
-|{N}	|匹配前一个字符N次					|
-|{N,}	|匹配前一个字符大于等于N次			|
-|{N,M}	|匹配前一个字符N到M次				|
-|-		|在列表中表示范围					|
-|^		|开始标记							|
-|$		|结束标记							|
-|\b		|类似于^和$作用之和，但是只能匹配字符|
-|\\\<	|匹配单词开始的字符串				|
-|\\\>	|匹配单词结尾的字符串				|
 ### xargs
 **作用：**  
 xargs的作用，就是将标准输入转换为命令行参数。Linux有些命令可以接受标准输入作为参数，而管道命令的作用，是将左侧命令的标准输出转换为标准输入，提供给右侧命令作为参数使用。在Linux系统中大多数命令都不接受标准输入作为参数，这导致无法使用管道命令传递参数。比如日常使用的echo就不接受管道传参。
@@ -523,16 +507,7 @@ g 为flag参数，常见的flag参数和含义如下：
 ```bash
 sed 's/[0-9]\{1,\}/NUMBERS/g'
 ```
-表示将开头为foo或者bar的字符替换成newString。这里使用来正则表达式来表示头部匹配，常见的用于替换的正则表达式有：  
-- ^ 行首定位符，/^my/表示所有以my开头的行  
-- $ 行尾定位符，/my$/表示所有以my结尾的行
-- . 匹配除换行符以外的单个字符，/m..y/表示字母m后面任意两个字符，再跟字母y的行
-- \* 匹配0个或多个前导符号 /my\*/匹配包含my后面连接0个或多个y的行
-- \+ 与\*作用基本相同，至少重复1次
-- [] 匹配指定字符组内的任意字符，[0-9]表示所有数字
-- \\\{n,m\\\} 前导符号重复n次到m次
-- \\\{n,\\\} 前导符号重复n次以上
-- \\| 匹配或符号前或后任意一个
+表示将开头为foo或者bar的字符替换成newString。这里使用来正则表达式来表示头部匹配  
 ```bash
 sed 's/.*/"&"/' file #将文件中每行内容用引号包括起来。&在替换字符中表示的是原始查找匹配的数据
 sed -n '/^.{50}/p' #打印长度不小于50个字符的行
@@ -541,6 +516,84 @@ sed ./ -name "*.py" | xargs sed -i.bak '/^[ ]*#/d' #将所有python文件的整�
 sed -n -e '5,7 p' -e '10,14p' file #打印出文件的5到7行，和文件的10到14行
 ```
 ### awk
+awk命令是处理文本文件的一个应用程序，几乎所有的Linux系统都自带这个程序。  
+**语法：**  
+```bash
+awk [options] [pattern] <action> <file_name>
+```
+**基本用法：**  
+```bash
+awk '{print $0}' demo.txt
+```
+上面是最简单的一个awk使用示例，它的作用是打印出demo.txt文件中的内容。awk命令处理逻辑是依次对每行内容执行动作，print $0表示打印改行中所有内容，$0表示行中所有内容。  
+**变量的使用：**  
+awk会根据空格和制表符将每一行分为若干字段，依次用$1、$2、$3表示第一、第二、第三个字段等等。  
+```bash
+$ cat >> a.txt <<EOF #将内容写入a.txt文件  
+heredoc> root:x:0:0:root:/root:/usr/bin/zsh
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+heredoc> EOF
+$ awk -F ':' '{print $1}' a.txt
+root 
+deamon
+bin
+sys
+sync
+$ awk -F '[:/]' '{print $1}' a.txt
+```
+上述示例中-F参数用于指定分隔符，如果想要指定两个分隔符可以像上述例子中一样-F '[:/]'将分隔符放在中括号中。print \$1表示逐行打印出该行的第一个字段；还可以同时打印多个字段，用逗号分隔\$n和\$m，否则打印时两个字符段将连结在一起。需要注意的时\$1这种变量不能在其外面加引号，否则将输出"\$1"。    
+除了\$与数字组合表示第几个字段，awk还提供了其他的变量：  
+变量NF表示当前行的字段数，因此可以用\$NF来表示最后一个字段，awk的其他变量含义如下：  
+- NR：表示当前正在处理的行数 
+- FILENAME：当前文件名
+- FS：字段分隔符，默认是空格和制表符 
+- RS：行分隔符，默认是换行 
+- OFS：用于输出的字段分隔符，用于打印时分隔字段，默认是空格 
+- ORS：输出记录的分隔符，用于打印时分隔记录，默认是换行
+- OFMT：数字输出的格式，默认为%.6g  
+
+除了awk提供的内置变量之外，还可以自定义变量。
+```bash
+$ awk '{msg="hello"; print msg}' demo.txt
+hello
+hello
+hello
+$ awk 'BEGIN {a=12; b=1; print a+b}' demo.txt
+13
+```
+**内置函数：**  
+awk提供了一些内置函数以便对原始数据处理。  
+- tolower() 字符转换为小写  
+- length() 返回字符串长度  
+- substr()  返回子字符串，用法为substr(str, start, length)，str为原始字符串，start为开始位置，length为自字符串长度，如果没有length参数，则字符串从start到结束 
+- sin() 正弦函数 
+- cos() 余弦函数
+- sqrt() 平方根
+- rand() 随机数  
+
+**设定输出条件：**  
+这种用法的基本格式如下：  
+```bash
+awk 'condition actions' <file>
+```
+```bash
+awk '/usr/ {print $1}' demo.txt #只会输出包含usr的行
+awk 'NR % 2 == 1 {print $0}' demo.txt #只会输出奇数行
+awk 'NR > 3 {print $0}' demo.txt #	只输出行号大于3的行
+awk '$1 == "root" || $1 == "bin" {print $0}' demo.txt #输出第一个字段为root或者bin的行
+```
+
+**BEGIN、END关键字的用法**  
+在脚本代码段前使用BEGIN关键字，会在读取一个文件前，运行一次BEGIN关键字后面的脚本代码段。END是在处理完文件的所有内容行之后，执行其后的脚本代码段。    
+```bash
+$ awk 'BEGIN {print "Start read file."} {print $1} END {print "Read file end."}' demo.txt
+Start read file.
+...
+Read file end.
+```
 ### perl
 ### watch
 ### 快捷键
