@@ -45,6 +45,11 @@ ls -al {0-9}.txt #列出0.txt到9.txt
 |\{m,\}|匹配至少m个前面的字符|
 **使用示例：**
 ```bash
+grep -E 1[0-9]{10} demo.txt #在demo.txt中查找符合手机号特征的数字
+awk '/((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2}\.){3}2(5[0-5]|[0-4]\d)|[0-1]?\d{1,2}/{print $0}' demo.txt #输出包含ip地址的行
+expr $string : "\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$" #判断string是否符合邮箱格式
+find . -name "[a-zA-Z].txt" -type f #找出当前目录下所有以纯字母命令的txt文件
+sed -i 's/goo+gle/google' demo.txt #将demo.txt中超过两个o的google转换成google
 ```
 ### $
 - $0	shell脚本中$1,$2...表示的是脚本或可执行文件调用的第几个参数，所有脚本都会将其调用方式作为第0个参数。比如使用./run.sh调用那么$0就是./run.sh；如果使用sh ./tmp/run.sh调用，那么$0就是./tmp/run.sh
