@@ -21,7 +21,7 @@
 - [:punct:]	匹配一个标点符号
 **使用示例：**
 ```bash
-
+ls -al {0-9}.txt #列出0.txt到9.txt
 ```
 #### 正则表达式
 **正则表达式元字符**  
@@ -594,8 +594,22 @@ Start read file.
 ...
 Read file end.
 ```
-### perl
 ### watch
+watch的作用是每隔一段时间调用后面的命令，并监控命令运行结果。  
+**语法：**  
+```bash
+watch [options] <command>
+```
+**使用示例：**
+```bash
+watch -n 1 -d free
+```
+上述命令的作用是没1秒中显示一次存储空间数据，-n 1表示运行命令的时间间隔是1秒，如果没有这个参数，默认是每2秒刷新一次。-d参数表示高亮显示两次之间的区别。  
+在运行过程中要退出watch可以使用ctrl+c快捷键结束进程。
+```bash
+watch -n 1 -d 'cat /proc/loadavg' #每隔1秒输出一次平均负载
+watch -n 4 -d 'netstat -ant' #每4秒高亮显示网络链接数变化
+```
 ### 快捷键
 Linux终端内置了一些快捷键操作，大大增加了命令输入修改的效率  
 - Ctrl + n: 显示下一个命令，oh-my-zsh中方向键下有相同功能
@@ -689,13 +703,165 @@ $ echo ${a/%log.txt/a.sh} #将以log.txt结尾替换成a.sh，若不以此结尾
 Users/heliwei/Downloads/a.sh
 ```
 ### set
+set命令用于修改Shell环境的运行参数，也就是可以定制环境。如果不带任何参数，会显示所有的环境变量和Shell参数。set命令一共有十多个参数可以定制，这里仅仅列举常见的4个。  
+**set -u：**  
 ```bash
-set -e -o pipefail #在脚本开头写这句话，单行或者单行管道命令出现错误，脚本会停止执行并报错
-# 效果等同于脚本开头"#! /bin/bash -e"
+#! /usr/bin/env bash
+echo $non-exist
+echo $SHELL
 ```
+在执行脚本的时候，如果遇到不存在的变量，bash默认会忽略它。例如上面的脚本运行时仅会输出bash。但变量不存在时理想的情况下应该时报错，而不是继续执行下去。  
+set -u语句就是用来改变这种情况。在脚本头部加上它，遇到不存在的变量就会报错并停止执行。  
+-u还有一种等价的写法是-o nounset。  
+**set -x：**  
+```bash
+#! /usr/bin/env bash
+set -x
+echo foobar
+```
+执行结果如下：  
+```bash
++ echo foobar
+foobar
+```
+可以看到在打印foobar之前会将产生这条输出的命令也打印出来，有利于调试脚本程序。  
+-x 的另一种写法为-o xtrace  
+**set -e：**  
+```bash
+#! /usr/bin/env bash
+non-exist
+echo hello
+```
+non-exist命令并不存在，执行时会报错，但是并不会终止运行，后面的语句依然会执行。  
+这样并不利于脚本的安全和排错。实际开发中希望某个命令失败就停止运行，防止错误累积。这时，一般有以下的处理方法。  
+```bash
+#方法1
+command || {echo "command failed."; exit 1}
+#方法2
+if ! command; then echo "command failed"; exit 1; fi
+#方法3
+command
+if [ $? -ne 0 ]; then
+	echo "command failed"
+	exit 1
+fi
+```
+除了停止执行，如果两个命令有继承关系，只有第一个命令执行成功了才能执行第二个命令需要采用如下的写法：  
+```bash
+command1 && command2
+```
+上面的做法比较麻烦，而且只能对局部作用，使用set -e则根本上解决了这个问题。  
+```bash
+#! /usr/bin/env bash
+set -e
+non-exist
+echo hello
+```
+执行这个脚本发现，当脚本在non-exist处出错之后将停止运行。  
+在脚本开头写set -e，单行或者单行管道命令出现错误，脚本会停止执行并报错，效果等同于脚本开头"#! /bin/bash -e"，另外一种写法是set -o errexit  
+**set -o pipefail：**  
+set -e有一个例外的情况，就是不适用与管道命令。  
+所谓的管道命令就是多个子命令通过管道（｜）组成一个大的命令。bash会把最后一个自命令的返回值作为整个命令的返回值。也就是说，只要最后一个子命令不失败，管道命令总是会成功执行，set -e就失去作用了。
+```bash
+#! /usr/bin/env bash
+set -e
+non-exist | echo hello
+```
+脚本执行过程中并不能发现错误并停止。这种情况应该使用-o pipefail来解决，它表示只要管道中一个子命令失败整个管道命令就失败，脚本就会终止运行。    
 ### eval
+eval会对后面的命令进行两边扫描，如果第一遍扫描后面命令是一个普通命令，则直接执行该命令；如果后面存在变量的间接引用，则先转译引用再执行代码。  
+**使用示例：**  
+```bash
+#! /usr/bin/env bash
+eval echo \$$#
+```
+如果想获取这个脚本输入的最后一个参数，常见的方法是先使用\$#获取参数的数量，再通过\$(参数数量)来获取最后一个参数。但是直接使用`echo $$#`最终输出的结果是进程号和'#'(因为\$\$会被识别成进程号)，这个时候就需要eval先将这行脚本翻译为`echo $Number`再执行。第一个\$符号前需要加一个'\'在eval第一遍过脚本的时候会将'\\\$'翻译为'\$'。  
 ### expr
-### exec
-### script
+expr命令可以实现数值运算、数值或字符串比较、字符串匹配、字符串提取、字符串长度计算等功能。它还具有几个特殊的功能，判断变量或者参数是否为整数，是否为空，是否为0等。  
+**计算字符串长度**  
+expr length $str开头可以向标准输出输出字符串的长度。  
+```bash
+string="hello world."
+echo ${#string} #计算字符串长度的另一种常用方法
+expr length $string #通过expr计算字符串长度
+```
+**获取序号**  
+expr index $str $substr用于返回substr在str中第一次出现的序号，如果substr不在str中，则返回0
+```bash
+$ string="hello world."
+$ expr index $string my
+0
+$ expr index $string wor
+5
+```
+**匹配字符串**  
+expr match $str $substr命令在str中匹配substr字符串，然后返回匹配到的substr字符串的长度，如果找不到则返回0  
+```bash
+$ string="hello world."
+$ expr match $string he.*
+11
+$ expr match $string he*
+2
+```
+**获取子串**  
+expr substr $str position length可以从第position位置开始抽取长度为length的子字符串。
+```bash
+$ string="hello world"
+$ echo ${string:2:5} 
+llo w
+$ echo ${string:2}
+llo world
+$ expr substr $string 2 5
+ello
+```
+上面提供了两种截取子字符串的例子，可以看出通过${}截取的方法序列是从0开始计数的，而expr substr方法序号从1开始计数  
+**匹配字符串**  
+expr $str : $regex如果str中能匹配regex正则表达式，则返回第一个匹配部分长度，如果不能匹配则返回0
+```bash
+$ string="hhhlllwwwhhhhh"
+$ expr $string : "h*"
+3
+$ expr $string : "l*"
+0
+```
+上述例子中能匹配h\*的地方有两处，返回的长度是第一处匹配的地方。  
+需要注意的是，正则表达式中默认前面有^,所以如果不从string的开头匹配则返回0  
+**“+token”用法**  
+expr中有些符号具有特殊意义，如match,index,length。如果要让其成为字符，使用表达式将任意token强制解析成普通字符。  
+```bash
+$ expr index length g
+expr: syntax error
+$ expr index + length g
+4
+```
+上述第一种用法length会被当作一个关键字，而不是一个字符串，所以会报语法错误。第二种是将其作为普通字符串的用法。  
+**算术运算与逻辑判断**  
+```bash
+$ expr 1+2
+1+2
+$ expr 1 + 2
+3
+$ expr 1 '*' 4
+4
+$ expr 1 \* 4
+4
+$ expr 1 \> 4
+0
+$ expr 1 = 1
+1
+$ expr 4 \| 5
+4
+$ expr 0 \| 5
+5
+$ expr 1 \& 4
+$ echo $[1 + 2]
+$ echo $((1 + 2))
+```
+注意数字与运算符之间应该有空格，否则会被识别为一个字符串。  
+另外需要注意的是，由于\*是shell的元字符，所以在使用时需转义或者用引号包围。  
+还能使用expr进行数值比较，如果为真，返回1；否则返回0。  
+与或计算中&和｜都需要转义或用引号包围，如果符号前后的变量为空则报错。
+数值计算同样可以通过\$[]和\$(())来实现。  
+
 ---
 
