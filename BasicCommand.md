@@ -339,7 +339,7 @@ unzip [options] <file>...
 ```
 **常见用法：**  
 ```bash
-zip -r test.zip test/ #打包test目录下的文件
+zip -r test.zip test/ #打包test目录下的文件, r表示递归文件夹下所有文件
 zip -rj test.zip test/ #打包test目录下的文件，且压缩包不带test目录
 zip -r test.zip test/ -P 12345 #设置解压密码为12345
 unzip -l test.zip #查看压缩包中的文件名，日期等信息
@@ -359,6 +359,20 @@ unzip:
 -d \<dir\> 指定文件解压缩后要存储的目录  
 
 解压和压缩还有gzip,bzip2,rar,unrar等命令  
+### rar  
+作用：   
+压缩产生rar格式文件，解压rar格式文件  
+语法：  
+```bash
+rar [options] {file | directory}...
+```
+使用示例：  
+```bash
+rar a test.rar file.txt  # 将file.txt打包成rar文件
+rar e test.rar  # 解压test.rar到当前路径，忽略所有的路径信息，只解压文件
+rar x test.rar  # 解压test.rar到当前路径，并保留所有的路径信息
+```
+
 ### diff
 **作用:**  
 diff是Unix系统的一个很重要的工具程序，它用来比较两个文本文件的差异，是代码管理的基石之一。   
